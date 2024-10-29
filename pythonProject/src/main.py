@@ -1,168 +1,206 @@
-def check_input(color):
-    if 0 >= color >= 255:
-        print("ERRO digite um numero de 0 a 255")
-        exit()
+import customtkinter as ctk
+from tkinter import filedialog
+
+from PIL import Image, ImageTk
+import numpy as np
+
+from image_processor import ImageProcessor
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
 
-def check_h_hsv(r, g, b):
-    h = 0
-    max = find_bigger(r, g, b)
-    min = find_smaller(r, g, b)
-    if max == min:
-        h = 0
-    elif max == r and g >= b:
-        h = (60 * ((g - b) / (max - min))) + 0
-    elif max == r and g < b:
-        h = (60 * ((g - b) / (max - min))) + 360
-    elif max == g:
-        h = (60 * ((b - r) / (max - min))) + 120
-    elif max == b:
-        h = (60 * ((r - g) / (max - min))) + 240
-    return h
+class ImageUploaderApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("Processamento de Ibagens")
+        self.geometry("1920x1080")
+
+        self.image_processor = ImageProcessor()
+
+        self.button_frame = ctk.CTkFrame(self, width=400)
+        self.button_frame.pack(side="left", fill="y", padx=10, pady=10)
+        self.setup_interface()
+
+        self.file_path_img1 = ""
+        self.file_path_img2 = ""
+        self.img1_array = None
+        self.img2_array = None
+        self.image = None
+
+    def setup_interface(self):
+        self.label = ctk.CTkLabel(self.button_frame, text="Selecione as imagens para operações:")
+        self.label.grid(row=0, column=0, columnspan=2, pady=20)
+
+        self.upload_button = ctk.CTkButton(self.button_frame, text="Selecionar Imagem 1",
+                                           command=self.open_file_dialog_img1)
+        self.upload_button.grid(row=1, column=0, pady=5)
+
+        self.upload_button_2 = ctk.CTkButton(self.button_frame, text="Selecionar Imagem 2",
+                                             command=self.open_file_dialog_img2)
+        self.upload_button_2.grid(row=1, column=1, pady=5)
+
+        self.setup_operation_buttons()
+
+        self.setup_canvas()
+
+    def setup_operation_buttons(self):
+        self.create_label_and_buttons(
+            "Operações Aritméticas",
+            ["Somar Imagens", "Subtrair Imagens", "Multiplicar Imagens", "Dividir Imagens"],
+            [self.sum_images, self.subtract_images, self.multiply_images, self.divide_images],
+            2
+        )
+
+        self.create_label_and_buttons(
+            "Operações Lógicas",
+            ["AND", "OR", "XOR", "NOT"],
+            [self.and_operation, self.or_operation, self.xor_operation, self.not_operation],
+            7)
+
+        self.create_label_and_buttons(
+            "Filtros",
+            [
+                "Converter para Escala de Cinza",
+                "Negativo",
+                "Converter para Binario",
+                "Filtragem Gaussiana",
+                "Detecção de Bordas (Sobel)",
+                "Equalização de Histograma"
+                ],
+            [
+                self.convert_to_grayscale,
+                self.convert_to_negative,
+                self.convert_to_binary,
+                self.apply_gaussian_filter,
+                self.apply_sobel_edge_detection,
+                self.apply_equalize_histogram
+            ],
+            12)
+
+    def create_label_and_buttons(self, label_text, button_texts, commands, start_row):
+        label = ctk.CTkLabel(self.button_frame, text=label_text)
+        label.grid(row=start_row, column=0, columnspan=2, pady=10)
+
+        for i, (text, command) in enumerate(zip(button_texts, commands)):
+            button = ctk.CTkButton(self.button_frame, text=text, command=command)
+            button.grid(row=start_row + i + 1, column=i % 2, pady=5)
+
+    def setup_canvas(self):
+        self.original_canvas = ctk.CTkCanvas(self, width=300, height=300)
+        self.original_canvas.pack(side="left", padx=10, pady=10)
+
+        self.image2_canvas = ctk.CTkCanvas(self, width=300, height=300)
+        self.image2_canvas.pack(side="left", padx=10, pady=10)
+
+        self.result_canvas = ctk.CTkCanvas(self, width=300, height=300)
+        self.result_canvas.pack(side="right", padx=10, pady=10)
+
+    def open_file_dialog_img1(self):
+        file = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.bmp *.tif")])
+        if file:
+            self.file_path_img1 = file
+            self.img1_array = self.image_processor.load_image(file)
+            self.image = Image.open(file)
+            self.display_image(file, self.original_canvas)
+
+    def open_file_dialog_img2(self):
+        file = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.bmp *.tif")])
+        if file:
+            self.file_path_img2 = file
+            self.img2_array = self.image_processor.load_image(file)
+            self.display_image(file, self.image2_canvas)
+
+    def display_image(self, file_path, canvas):
+        image = Image.open(file_path)
+        image.thumbnail((300, 300))
+        img_tk = ImageTk.PhotoImage(image)
+        canvas.create_image(150, 150, image=img_tk)
+        canvas.image = img_tk
+
+    def show_result(self, result_image):
+        result_pil_image = Image.fromarray(result_image) if isinstance(result_image, np.ndarray) else result_image
+        result_pil_image.thumbnail((300, 300))
+        result_img_tk = ImageTk.PhotoImage(result_pil_image)
+        self.result_canvas.create_image(150, 150, image=result_img_tk)
+        self.result_canvas.image = result_img_tk
+
+    # Operações aritméticas
+    def sum_images(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "sum")
+            self.show_result(result_image)
+
+    def subtract_images(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "subtract")
+            self.show_result(result_image)
+
+    def multiply_images(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "multiply")
+            self.show_result(result_image)
+
+    def divide_images(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "divide")
+            self.show_result(result_image)
+
+    # Operações lógicas
+    def and_operation(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.logical_operation(self.img1_array, self.img2_array, "and")
+            self.show_result(result_image)
+
+    def or_operation(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.logical_operation(self.img1_array, self.img2_array, "or")
+            self.show_result(result_image)
+
+    def xor_operation(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.logical_operation(self.img1_array, self.img2_array, "xor")
+            self.show_result(result_image)
+
+    def not_operation(self):
+        if self.img1_array is not None:
+            result_image = self.image_processor.logical_operation(self.img1_array, None, "not")
+            self.show_result(result_image)
+
+    # Filtros
+    def convert_to_grayscale(self):
+        if self.image:
+            grayscale_image = self.image_processor.convert_to_grayscale(self.image)
+            self.show_result(grayscale_image)
+
+    def convert_to_binary(self):
+        if self.image:
+            binary_image = self.image_processor.convert_to_binary(self.image)
+            self.show_result(binary_image)
+
+    def convert_to_negative(self):
+        if self.image:
+            negative_image = self.image_processor.convert_to_negative(self.image)
+            self.show_result(negative_image)
+
+    def apply_gaussian_filter(self):
+        if self.image:
+            gaussian_image = self.image_processor.apply_gaussian_filter(self.image)
+            self.show_result(gaussian_image)
+
+    def apply_sobel_edge_detection(self):
+        if self.image:
+            sobel_image = self.image_processor.edge_detection(self.image, method="sobel")
+            self.show_result(sobel_image)
+
+    def apply_equalize_histogram(self):
+        if self.image:
+            equalized_image = self.image_processor.equalize_histogram(self.image)
+            self.show_result(equalized_image)
+            self.image_processor.plot_histograms(self.image, equalized_image)
 
 
-def find_bigger(r, g, b):
-    if r > g:
-        if r > b:
-            return r
-        else:
-            return b
-    else:
-        if g > b:
-            return g
-        else:
-            return b
-
-
-def find_smaller(r, g, b):
-    if r < g:
-        if r < b:
-            return r
-        else:
-            return b
-    else:
-        if g < b:
-            return g
-        else:
-            return b
-
-
-def check_s_hsv(r, g, b):
-    max = find_bigger(r, g, b)
-    min = find_smaller(r, g, b)
-    if max == 0:
-        return 0
-    return (max - min) / max
-
-
-def normalize_rgb(r, g, b):
-    normalized_r = r / (r + g + b)
-    normalized_g = g / (r + g + b)
-    normalized_b = b / (r + g + b)
-
-    print(f"Cores normalizadas em RGB: ", "R: " "{:.2f}".format(normalized_r), "G: " "{:.2f}".format(normalized_g),
-          "B: " "{:.2f}".format(normalized_b))
-
-
-normalized_r = 0
-normalized_g = 0
-normalized_b = 0
-
-print("*** PRIMEIRO TDE ***")
-r = int(input("Digite o numero de R -> "))
-check_input(r)
-g = int(input("Digite o numero de G -> "))
-check_input(g)
-b = int(input("Digite o numero de B -> "))
-check_input(b)
-
-normalize_rgb(r, g, b)
-# Conversao RGB para HSV
-h_hsv = check_h_hsv(r, g, b)
-s_hsv = check_s_hsv(r, g, b)
-v_hsv = find_bigger(r, g, b) / 255
-
-
-print(f"HSV: ", "H: " "{:.2f}".format(h_hsv), "S: ""{:.2f}".format(s_hsv), "V: ", v_hsv)
-
-
-def convert_hsv_to_rgb(h_hsv, s_hsv, v_hsv):
-    c = v_hsv * s_hsv
-    x = c * (1 - abs((h_hsv / 60) % 2 - 1))
-    m = v_hsv - c
-    if 0 <= h_hsv < 60:
-        r_prime=c
-        g_prime=x
-        b_prime=0
-    elif 60 <= h_hsv < 120:
-        r_prime=x
-        g_prime=c
-        b_prime=0
-    elif 120 <= h_hsv < 180:
-        r_prime=0
-        g_prime=c
-        b_prime=x
-    elif 180 <= h_hsv < 240:
-        r_prime= 0
-        g_prime=x
-        b_prime=c
-    elif 240 <= h_hsv < 300:
-        r_prime=x
-        g_prime=0
-        b_prime=c
-    elif 300 <= h_hsv < 360:
-        r_prime=c
-        g_prime=0
-        b_prime=x
-    else:
-        r_prime=0
-        g_prime=0
-        b_prime=0
-
-    r = (r_prime+m)*255
-    g = (g_prime+m)*255
-    b = (b_prime+m)*255
-
-    print(f"R: {int(r)} G: {int(g)} B: {int(b)}")
-
-
-convert_hsv_to_rgb(h_hsv, s_hsv, v_hsv)
-# 255, 128, 100
-
-
-def convert_rgb_to_cmyk(r, g, b):
-    r_prime = r/255
-    g_prime = g/255
-    b_prime = b/255
-    k = 1-find_bigger(r_prime,g_prime,b_prime)
-    c = (1-r_prime-k)/(1-k)
-    m = (1-g_prime-k)/(1-k)
-    y = (1-b_prime-k)/(1-k)
-    m_str = "{:.2f}".format(m)
-    y_str = "{:.2f}".format(y)
-    k_str = "{:.2f}".format(k)
-    c_str = "{:.2f}".format(c)
-    print(f"C: {c_str}  M: {m_str}  Y: {y_str}  K: {k_str}")
-    return c, m, y, k
-
-
-c,m,y,k = convert_rgb_to_cmyk(r,g,b)
-
-
-def convert_cmyk_to_rgb(c, m, y, k):
-    r = 255 * ((1-c) * (1-k))
-    g = 255 * ((1-m) * (1-k))
-    b = 255 * ((1-y) * (1-k))
-
-    print(f"R: {int(r)} G: {int(g)} B: {int(b)}")
-
-
-convert_cmyk_to_rgb(c,m,y,k)
-
-
-def convert_rgb_to_grey_scale(r, g, b):
-    grey = (r+g+b) / 3
-    print(f"GREYSCALE: {grey}")
-
-
-convert_rgb_to_grey_scale(r,g,b)
+if __name__ == "__main__":
+    app = ImageUploaderApp()
+    app.mainloop()
