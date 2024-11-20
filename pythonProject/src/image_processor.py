@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 
 from arithmetics import ArithmeticsOperations
 from logical import LogicalOperations
+from gaussian_calcs import GaussianCalcs
 
 
 class ImageProcessor:
 
     def __init__(self):
-        pass
+        self.gaussian_calcs = GaussianCalcs()
 
     @staticmethod
     def load_image(image_path):
@@ -124,9 +125,90 @@ class ImageProcessor:
 
         return Image.fromarray(negative_img)
 
-    @staticmethod
-    def apply_gaussian_filter(image):
-        return image.filter(ImageFilter.GaussianBlur(radius=2))
+    def apply_gaussian_filter(self,image):
+        img_array = np.array(image, dtype=np.float32)
+
+        # Tamanho do kernel
+        kernel_size = 5 #sempre um valor impar
+        half_size = kernel_size // 2
+
+        # Criação do kernel gaussiano
+        GKernel = self.gaussian_kernel(kernel_size)
+
+        # Aplicação do filtro gaussiano
+        height, width, channels = img_array.shape
+        filtered_image = np.zeros_like(img_array)
+
+        for c in range(channels):
+            for x in range(half_size, width - half_size):
+                for y in range(half_size, height - half_size):
+                    pixel_value = 0
+
+                    for i in range(kernel_size):
+                        for j in range(kernel_size):
+                            pixel_value += GKernel[i, j] * img_array[y - half_size + i, x - half_size + j, c]
+
+                    filtered_image[y, x, c] = pixel_value
+
+        # Converte o resultado para uint8 e cria uma imagem PIL
+        filtered_image = np.clip(filtered_image, 0, 255).astype(np.uint8)
+
+        return Image.fromarray(filtered_image)
+
+
+
+    def gaussian_kernel(self, kernel_size):
+        sigma = 0.6
+
+        GKernel = [[0.0 for _ in range(kernel_size)] for _ in range(kernel_size)]
+        sum_kernel = 0.0
+        pi = 3.141592653589793
+
+        """
+        Calculo do valor do coeficiente, a formula sendo 1 / 2*pi*sigma²
+        """
+        coefficient = 1.0 / (2.0 * pi * sigma * sigma)
+        # Calcula o ponto central do kernel
+        half_size = kernel_size // 2
+
+        # Calcula os valores do kernel
+        """
+        O kernel eh uma matriz NxN (no caso, 5x5)
+        definindo o half_size como nosso range, a gente garante que a nossa matriz seja preenchida com:
+        o valor NEGATIVO da metade do tamanho da matriz até o valor POSITIVO da metado do tamanho da matriz
+        algo como:
+        -2 -1  0 -1 -2
+        """
+        for x in range(-half_size, half_size + 1):
+            for y in range(-half_size, half_size + 1):
+                """
+                formula do calculo do exponencial x²+y² / 2*sigma²
+                por isso o sigma controla a suavidade do filtro, quanto maior o valor, mais suave
+                """
+                exponent = -(x ** 2 + y ** 2) / (2.0 * sigma * sigma)
+                """
+                Aqui a gente multiplica o coeficiente pelo exponencial do expoente
+                """
+                value = coefficient * self.gaussian_calcs.exp_manual(exponent)
+
+                """
+                estamos preenchendo a matriz do kernel  nas posicoes que estamos percorrendo 
+                  com o resultado dos calcumos efetuados acima 
+                """
+                GKernel[x + half_size][y + half_size] = value
+
+                """
+                utilizamos esse valor abaixo para garanir que a soma de tudo seja 1
+                """
+                sum_kernel += value
+
+        # Normaliza o kernel para garantir que a soma dos elementos seja 1
+        for i in range(kernel_size):
+            for j in range(kernel_size):
+                GKernel[i][j] /= sum_kernel
+
+        return np.array(GKernel, dtype=np.float32)
+
 
     @staticmethod
     def edge_detection(image, method="sobel"):
