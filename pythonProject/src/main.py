@@ -69,7 +69,8 @@ class ImageUploaderApp(ctk.CTk):
                 "Multiplicar Imagens",
                 "Dividir Imagens",
                 "Media",
-                "Mediana"
+                "Mediana",
+                "Blending"
             ],
             [
                 self.sum_images,
@@ -77,7 +78,8 @@ class ImageUploaderApp(ctk.CTk):
                 self.multiply_images,
                 self.divide_images,
                 self.media,
-                self.mediana
+                self.mediana,
+                self.blending
             ],
             2
         )
@@ -269,6 +271,11 @@ class ImageUploaderApp(ctk.CTk):
     def mediana(self):
         if self.img1_array is not None and self.img2_array is not None:
             result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "mediana")
+            self.show_result(result_image)
+
+    def blending(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "blending")
             self.show_result(result_image)
 
     def increase_bright(self):

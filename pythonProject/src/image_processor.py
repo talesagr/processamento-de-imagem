@@ -38,6 +38,9 @@ class ImageProcessor:
             result_image = arithmetics.media_images(img1, img2)
         elif operation == "mediana":
             result_image = arithmetics.mediana_images(img1, img2)
+        elif operation == "blending":
+            result_image = arithmetics.blend_images(img1, img2)
+
 
         result_image = np.clip(result_image, 0, 255).astype(np.uint8)
         return result_image

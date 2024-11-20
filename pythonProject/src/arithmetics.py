@@ -205,13 +205,27 @@ class ArithmeticsOperations:
 
         return median_img
 
-    # def manual_clip(self,array, a_min, a_max):
-    #     clipped_array = array.copy()
-    #
-    #     # Itera sobre o array e aplica os limites
-    #     for i in range(len(array)):
-    #         if array[i] < a_min:
-    #             clipped_array[i] = a_min
-    #         elif array[i] > a_max:
-    #             clipped_array[i] = a_max
-    #     return clipped_array
+
+    def blend_images(self, img1, img2, alpha=0.7):
+        #MUDAR O ALPHA AQUI QUANDO QUISER RESULTADOS DIFERENTES
+
+        img1_array = np.array(img1, dtype=np.float32)
+        img2_array = np.array(img2, dtype=np.float32)
+
+        blended_img = np.zeros_like(img1_array, dtype=np.float32)
+
+        if img1_array.ndim == 3:
+            height, width, channels = img1_array.shape
+
+            for y in range(height):# blended = alpha * pixel1 + (1 - alpha) * pixel2::: quando alpha = 0, o resultado eh identico a segunda imagm
+                for x in range(width):#blended_pixel[R->G->B]=alpha*pixel1[R->G->B]+(1−alpha)*pixel2[R->G->B]
+                    for c in range(channels):
+                        blended_img[y, x, c] = alpha * img1_array[y, x, c] + (1 - alpha) * img2_array[y, x, c]
+        else:
+            height, width = img1_array.shape
+
+            for y in range(height):
+                for x in range(width):
+                    blended_img[y, x] = alpha * img1_array[y, x] + (1 - alpha) * img2_array[y, x]
+
+        return Image.fromarray(np.clip(blended_img, 0, 255).astype(np.uint8))
