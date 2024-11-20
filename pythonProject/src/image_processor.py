@@ -1,6 +1,7 @@
 from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 from arithmetics import ArithmeticsOperations
 from logical import LogicalOperations
@@ -222,6 +223,31 @@ class ImageProcessor:
                     contrast_img[y, x] = int(0.6 * (img_array[y, x] - midpoint) + midpoint)
 
         return Image.fromarray(np.clip(contrast_img, 0, 255).astype(np.uint8))
+
+    def plot_histograms(self, image, equalized_image):
+        original_array = np.array(image)
+        equalized_array = np.array(equalized_image)
+
+        plt.figure(figsize=(12, 6))
+
+        # Histograma da imagem original
+        plt.subplot(1, 2, 1)
+        plt.hist(original_array.ravel(), bins=256, range=(0, 256), color='blue', alpha=0.7)
+        plt.title("Histograma Original")
+        plt.xlabel("Intensidade de Cinza")
+        plt.ylabel("Frequência")
+
+        # Histograma da imagem equalizada
+        plt.subplot(1, 2, 2)
+        plt.hist(equalized_array.ravel(), bins=256, range=(0, 256), color='green', alpha=0.7)
+        plt.title("Histograma Equalizado")
+        plt.xlabel("Intensidade de Cinza")
+        plt.ylabel("Frequência")
+
+        # Exibe os gráficos
+        plt.tight_layout()
+        plt.show()
+
 
     def spin_X(self, image):
         img_array = np.array(image)
