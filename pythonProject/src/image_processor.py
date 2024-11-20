@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps, ImageFilter, ImageEnhance
 import numpy as np
 import cv2
 
@@ -131,3 +131,115 @@ class ImageProcessor:
                 raise ValueError("image2 não é compatível. Deve ser um array NumPy ou objeto PIL.Image.")
 
         return image1,image2
+
+    def increase_bright(self, image):
+        img_array = np.array(image, dtype=np.int32)
+
+        if img_array.ndim == 3:
+            height, width, channels = img_array.shape
+            bright_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    for c in range(channels):
+                        bright_img[y, x, c] = min(img_array[y, x, c] + 50, 255)
+        else:
+            height, width = img_array.shape
+            bright_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    bright_img[y, x] = min(img_array[y, x] + 50, 255)
+
+        return Image.fromarray(np.clip(bright_img, 0, 255).astype(np.uint8))
+
+    def decrease_bright(self, image):
+        img_array = np.array(image, dtype=np.int32)
+
+        if img_array.ndim == 3:
+            height, width, channels = img_array.shape
+            bright_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    for c in range(channels):
+                        bright_img[y, x, c] = max(img_array[y, x, c] - 50, 0)
+        else:
+            height, width = img_array.shape
+            bright_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    bright_img[y, x] = max(img_array[y, x] - 50, 0)
+
+        return Image.fromarray(np.clip(bright_img, 0, 255).astype(np.uint8))
+
+    def increase_contrast(self, image):#40%
+        img_array = np.array(image, dtype=np.int32)
+
+        midpoint = 128
+
+        if img_array.ndim == 3:
+            height, width, channels = img_array.shape
+            contrast_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    for c in range(channels):# novo_valor = fator × ( valor_pixel − media) + media
+                        contrast_img[y, x, c] = int(1.4 * (img_array[y, x, c] - midpoint) + midpoint)
+        else:
+            height, width = img_array.shape
+            contrast_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    contrast_img[y, x] = int(1.4 * (img_array[y, x] - midpoint) + midpoint)
+
+        return Image.fromarray(np.clip(contrast_img, 0, 255).astype(np.uint8))
+
+    def decrease_contrast(self, image):#40%
+        img_array = np.array(image, dtype=np.int32)
+
+        midpoint = 128
+
+        if img_array.ndim == 3:
+            height, width, channels = img_array.shape
+            contrast_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    for c in range(channels):
+                        contrast_img[y, x, c] = int(0.6 * (img_array[y, x, c] - midpoint) + midpoint)
+        else:
+            height, width = img_array.shape
+            contrast_img = np.zeros_like(img_array)
+
+            for y in range(height):
+                for x in range(width):
+                    contrast_img[y, x] = int(0.6 * (img_array[y, x] - midpoint) + midpoint)
+
+        return Image.fromarray(np.clip(contrast_img, 0, 255).astype(np.uint8))
+
+    def spin_X(self, image):
+        img_array = np.array(image)
+        height, width, channels = img_array.shape
+
+        flipped_img = np.zeros_like(img_array)
+
+        for y in range(height):
+            for x in range(width):
+                flipped_img[y, x] = img_array[height - y - 1, x]
+
+        return Image.fromarray(flipped_img)
+
+    def spin_Y(self, image):
+        img_array = np.array(image)
+        height, width, channels = img_array.shape
+
+        flipped_img = np.zeros_like(img_array)
+
+        for y in range(height):
+            for x in range(width):
+                flipped_img[y, x] = img_array[y, width - x - 1]
+
+        return Image.fromarray(flipped_img)

@@ -1,6 +1,5 @@
 import customtkinter as ctk
-from tkinter import filedialog
-
+from tkinter import filedialog, Canvas, Scrollbar
 from PIL import Image, ImageTk
 import numpy as np
 
@@ -19,15 +18,32 @@ class ImageUploaderApp(ctk.CTk):
 
         self.image_processor = ImageProcessor()
 
-        self.button_frame = ctk.CTkFrame(self, width=400)
-        self.button_frame.pack(side="left", fill="y", padx=10, pady=10)
-        self.setup_interface()
+        self.scrollable_frame_container = ctk.CTkFrame(self, width=400)
+        self.scrollable_frame_container.pack(side="left", fill="y", padx=10, pady=10)
+
+        self.canvas = Canvas(self.scrollable_frame_container, bg="#333333", highlightthickness=0)
+        self.canvas.pack(side="left", fill="both", expand=True)
+
+        self.scrollbar = Scrollbar(self.scrollable_frame_container, orient="vertical", command=self.canvas.yview)
+        self.scrollbar.pack(side="right", fill="y")
+
+        self.button_frame = ctk.CTkFrame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.button_frame, anchor="nw")
+
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.button_frame.bind("<Configure>", self.on_frame_configure)
 
         self.file_path_img1 = ""
         self.file_path_img2 = ""
         self.img1_array = None
         self.img2_array = None
         self.image = None
+
+        self.setup_interface()
+
+    def on_frame_configure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def setup_interface(self):
         self.label = ctk.CTkLabel(self.button_frame, text="Selecione as imagens para operações:")
@@ -42,7 +58,6 @@ class ImageUploaderApp(ctk.CTk):
         self.upload_button_2.grid(row=1, column=1, pady=5)
 
         self.setup_operation_buttons()
-
         self.setup_canvas()
 
     def setup_operation_buttons(self):
@@ -70,7 +85,11 @@ class ImageUploaderApp(ctk.CTk):
         self.create_label_and_buttons(
             "Operações Lógicas",
             ["AND", "OR", "XOR", "NOT"],
-            [self.and_operation, self.or_operation, self.xor_operation, self.not_operation],
+            [
+                self.and_operation,
+                self.or_operation,
+                self.xor_operation,
+                self.not_operation],
             7)
 
         self.create_label_and_buttons(
@@ -91,7 +110,35 @@ class ImageUploaderApp(ctk.CTk):
                 self.apply_sobel_edge_detection,
                 self.apply_equalize_histogram
             ],
-            12)
+            12
+        )
+
+        self.create_label_and_buttons(
+            "Ajustes de Brilho e Contraste",
+            [
+                "Aumentar Brilho",
+                "Diminuir Brilho",
+                "Aumentar Contraste",
+                "Diminuir Contraste"
+            ],
+            [
+                self.increase_bright,
+                self.decrease_bright,
+                self.increase_contrast,
+                self.decrease_contrast
+            ],
+            18
+        )
+
+        self.create_label_and_buttons(
+            "Rotação",
+            ["Girar Verticalmente", "Girar Horizontalmente"],
+            [
+                self.spin_Y,
+                self.spin_X
+            ],
+            23
+        )
 
     def create_label_and_buttons(self, label_text, button_texts, commands, start_row):
         label = ctk.CTkLabel(self.button_frame, text=label_text)
@@ -222,6 +269,36 @@ class ImageUploaderApp(ctk.CTk):
     def mediana(self):
         if self.img1_array is not None and self.img2_array is not None:
             result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "mediana")
+            self.show_result(result_image)
+
+    def increase_bright(self):
+        if self.image:
+            result_image = self.image_processor.increase_bright(self.image)
+            self.show_result(result_image)
+
+    def decrease_bright(self):
+        if self.image:
+            result_image = self.image_processor.decrease_bright(self.image)
+            self.show_result(result_image)
+
+    def increase_contrast(self):
+        if self.image:
+            result_image = self.image_processor.increase_contrast(self.image)
+            self.show_result(result_image)
+
+    def decrease_contrast(self):
+        if self.image:
+            result_image = self.image_processor.decrease_contrast(self.image)
+            self.show_result(result_image)
+
+    def spin_X(self):
+        if self.image:
+            result_image = self.image_processor.spin_X(self.image)
+            self.show_result(result_image)
+
+    def spin_Y(self):
+        if self.image:
+            result_image = self.image_processor.spin_Y(self.image)
             self.show_result(result_image)
 
 if __name__ == "__main__":
