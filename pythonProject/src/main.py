@@ -48,8 +48,22 @@ class ImageUploaderApp(ctk.CTk):
     def setup_operation_buttons(self):
         self.create_label_and_buttons(
             "Operações Aritméticas",
-            ["Somar Imagens", "Subtrair Imagens", "Multiplicar Imagens", "Dividir Imagens"],
-            [self.sum_images, self.subtract_images, self.multiply_images, self.divide_images],
+            [
+                "Somar Imagens",
+                "Subtrair Imagens",
+                "Multiplicar Imagens",
+                "Dividir Imagens",
+                "Media",
+                "Mediana"
+            ],
+            [
+                self.sum_images,
+                self.subtract_images,
+                self.multiply_images,
+                self.divide_images,
+                self.media,
+                self.mediana
+            ],
             2
         )
 
@@ -200,6 +214,15 @@ class ImageUploaderApp(ctk.CTk):
             self.show_result(equalized_image)
             self.image_processor.plot_histograms(self.image, equalized_image)
 
+    def media(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "media")
+            self.show_result(result_image)
+
+    def mediana(self):
+        if self.img1_array is not None and self.img2_array is not None:
+            result_image = self.image_processor.arithmetic_operation(self.img1_array, self.img2_array, "mediana")
+            self.show_result(result_image)
 
 if __name__ == "__main__":
     app = ImageUploaderApp()
