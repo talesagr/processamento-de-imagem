@@ -64,8 +64,7 @@ class ImageProcessor:
 
         return result_image
 
-    @staticmethod
-    def convert_to_grayscale(image):
+    def convert_to_grayscale(self, image):
         image_array = np.array(image)
 
         if image_array.ndim != 3 or image_array.shape[2] != 3:
@@ -81,15 +80,49 @@ class ImageProcessor:
 
         return grayscale_img
 
-    @staticmethod
-    def convert_to_binary(image):
-        grayscale_image = image.convert("L")
-        binary_image = grayscale_image.point(lambda p: p > 128 and 255)
-        return binary_image
+
+    def convert_to_binary(self,image):
+        threshold = 128
+        if image.mode != "L":
+            grayscale_image = self.convert_to_grayscale(image)
+        else:
+            grayscale_image = image
+
+        img_array = np.array(grayscale_image, dtype=np.uint8)
+
+        binary_img = np.zeros_like(img_array, dtype=np.uint8)
+
+        height, width = img_array.shape
+        for y in range(height):
+            for x in range(width):
+                #se o pixel for maior que 128 entao ele eh considerado 255, caso contrario = 0
+                binary_img[y, x] = 255 if img_array[y, x] > threshold else 0
+
+        # Converte o array resultante para uma imagem PIL
+        return Image.fromarray(binary_img)
+
 
     @staticmethod
     def convert_to_negative(image):
-        return ImageOps.invert(image)
+        img_array = np.array(image, dtype=np.uint8)
+
+        negative_img = np.zeros_like(img_array, dtype=np.uint8)
+
+        if img_array.ndim == 3:
+            height, width, channels = img_array.shape
+
+            for y in range(height):
+                for x in range(width):
+                    for c in range(channels):
+                        negative_img[y, x, c] = 255 - img_array[y, x, c]
+        else:
+            height, width = img_array.shape
+
+            for y in range(height):
+                for x in range(width):
+                    negative_img[y, x] = 255 - img_array[y, x]
+
+        return Image.fromarray(negative_img)
 
     @staticmethod
     def apply_gaussian_filter(image):
