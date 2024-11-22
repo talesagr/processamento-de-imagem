@@ -225,15 +225,43 @@ class ImageProcessor:
 
     @staticmethod
     def equalize_histogram(image):
-        if image.mode != "L":
-            raise ValueError("A equalização de histograma requer uma imagem em escala de cinza")
-
         image_array = np.array(image)
 
-        equalized_image = cv2.equalizeHist(image_array)
+        equalized_image_array = np.zeros_like(image_array, dtype=np.uint8)
 
-        return Image.fromarray(equalized_image)
+        def equalize_channel(channel):
+            hist = np.zeros(256, dtype=np.int32)
+            for pixel in channel.flatten():
+                hist[pixel] += 1
 
+            cdf = np.zeros(256, dtype=np.int32)
+            cdf[0] = hist[0]
+            for i in range(1, 256):
+                cdf[i] = cdf[i - 1] + hist[i]
+
+            cdf_min = cdf.min()
+            cdf_max = cdf.max()
+            cdf_normalized = ((cdf - cdf_min) / (cdf_max - cdf_min) * 255).astype(np.uint8)
+
+            equalized_channel = np.zeros_like(channel, dtype=np.uint8)
+            for i in range(channel.shape[0]):
+                for j in range(channel.shape[1]):
+                    equalized_channel[i, j] = cdf_normalized[channel[i, j]]
+
+            return equalized_channel
+
+        for c in range(3):
+            equalized_image_array[:, :, c] = equalize_channel(image_array[:, :, c])
+
+        return Image.fromarray(equalized_image_array)
+
+
+    def manual_flatten(matrix):
+        flattened = []
+        for row in matrix:
+            for value in row:
+                flattened.append(value)
+        return np.array(flattened)
 
     def check_image_compatibility(self, image1, image2):
         # Converte image1 para PIL.Image se necessário
