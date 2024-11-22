@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import numpy as np
 
 from image_processor import ImageProcessor
+from morphologics import MorphologicsFilters
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -18,6 +19,7 @@ class ImageUploaderApp(ctk.CTk):
         self.geometry("1920x1080")
 
         self.image_processor = ImageProcessor()
+        self.morphology_filters = MorphologicsFilters()
 
         self.scrollable_frame_container = ctk.CTkFrame(self, width=600)
         self.scrollable_frame_container.pack(side="left", fill="y", padx=10, pady=10)
@@ -123,6 +125,25 @@ class ImageUploaderApp(ctk.CTk):
         )
 
         current_row = self.add_order_filter_controls(current_row)
+
+        current_row = self.create_label_and_buttons(
+            "Operações Morfológicas",
+            [
+                "Dilatação",
+                "Erosão",
+                "Abertura",
+                "Fechamento",
+                "Contorno"
+            ],
+            [
+                self.morf_filter_dilatation,
+                self.morf_filter_erosion,
+                self.morf_filter_open,
+                self.morf_filter_close,
+                self.morf_filter_contour
+            ],
+            current_row
+        )
 
         current_row=self.create_label_and_buttons(
             "Ajustes de Brilho e Contraste",
@@ -373,6 +394,30 @@ class ImageUploaderApp(ctk.CTk):
             result_image = self.image_processor.apply_order(self.image, order)
             self.show_result(result_image)
 
+    def morf_filter_dilatation(self):
+        if self.image:
+            result_image = self.morphology_filters.morf_filter_dilatation(self.image)
+            self.show_result(result_image)
+
+    def morf_filter_erosion(self):
+        if self.image:
+            result_image = self.morphology_filters.morf_filter_erosion(self.image)
+            self.show_result(result_image)
+
+    def morf_filter_open(self):
+        if self.image:
+            result_image = self.morphology_filters.morf_filter_open(self.image)
+            self.show_result(result_image)
+
+    def morf_filter_close(self):
+        if self.image:
+            result_image = self.morphology_filters.morf_filter_close(self.image)
+            self.show_result(result_image)
+
+    def morf_filter_contour(self):
+        if self.image:
+            result_image = self.morphology_filters.morf_filter_contour(self.image)
+            self.show_result(result_image)
 
 if __name__ == "__main__":
     app = ImageUploaderApp()
