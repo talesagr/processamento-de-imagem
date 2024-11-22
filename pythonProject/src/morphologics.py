@@ -3,7 +3,6 @@ from PIL import Image
 
 class MorphologicsFilters:
     def __init__(self):
-        #Da pra mudar o kernel aqui e obter diferentes operacoes
         self.kernel = np.array([
             [1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1],

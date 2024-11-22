@@ -6,12 +6,14 @@ import matplotlib.pyplot as plt
 from arithmetics import ArithmeticsOperations
 from logical import LogicalOperations
 from gaussian_calcs import GaussianCalcs
+from edge_filter import EdgeFilter
 
 
 class ImageProcessor:
 
     def __init__(self):
         self.gaussian_calcs = GaussianCalcs()
+        self.edge_filter = EdgeFilter()
 
     @staticmethod
     def load_image(image_path):
@@ -210,17 +212,16 @@ class ImageProcessor:
         return np.array(GKernel, dtype=np.float32)
 
 
-    @staticmethod
-    def edge_detection(image, method="sobel"):
-        gray_image = np.array(image.convert("L"))
+    def edge_detection(self,image, method="sobel"):
+        img_array = np.array(image, dtype=np.int32)
 
         if method == "sobel":
-            sobelx = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize=3)
-            sobely = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1, ksize=3)
-            return Image.fromarray(cv2.magnitude(sobelx, sobely))
+            return self.edge_filter.sobel(img_array)
         elif method == "laplacian":
-            laplacian = cv2.Laplacian(gray_image, cv2.CV_64F)
-            return Image.fromarray(laplacian)
+            return self.edge_filter.laplacian(img_array)
+        elif method == "prewitt":
+            return self.edge_filter.prewitt(img_array)
+
 
     @staticmethod
     def equalize_histogram(image):

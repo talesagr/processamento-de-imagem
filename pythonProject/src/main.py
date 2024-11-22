@@ -97,7 +97,8 @@ class ImageUploaderApp(ctk.CTk):
                 self.and_operation,
                 self.or_operation,
                 self.xor_operation,
-                self.not_operation],
+                self.not_operation
+            ],
             current_row
         )
 
@@ -108,7 +109,6 @@ class ImageUploaderApp(ctk.CTk):
                 "Negativo",
                 "Converter para Binario",
                 "Filtragem Gaussiana",
-                "Detecção de Bordas (Sobel)",
                 "Equalização de Histograma",
                 "Filtragem de Ordem"
                 ],
@@ -117,7 +117,6 @@ class ImageUploaderApp(ctk.CTk):
                 self.convert_to_negative,
                 self.convert_to_binary,
                 self.apply_gaussian_filter,
-                self.apply_sobel_edge_detection,
                 self.apply_equalize_histogram,
                 self.apply_order
             ],
@@ -168,6 +167,21 @@ class ImageUploaderApp(ctk.CTk):
             [
                 self.spin_Y,
                 self.spin_X
+            ],
+            current_row
+        )
+
+        current_row = self.create_label_and_buttons(
+            "Detecção de Bordas",
+            [
+                "Sobel",
+                "Laplacian",
+                "Prewitt"
+            ],
+            [
+                self.apply_sobel_edge_detection,
+                self.apply_laplacian_edge_detection,
+                self.apply_prewitt_edge_detection
             ],
             current_row
         )
@@ -418,6 +432,16 @@ class ImageUploaderApp(ctk.CTk):
         if self.image:
             result_image = self.morphology_filters.morf_filter_contour(self.image)
             self.show_result(result_image)
+
+    def apply_laplacian_edge_detection(self):
+        if self.image:
+            laplacian_image = self.image_processor.edge_detection(self.image, method="laplacian")
+            self.show_result(laplacian_image)
+
+    def apply_prewitt_edge_detection(self):
+        if self.image:
+            prewitt_image = self.image_processor.edge_detection(self.image, method="prewitt")
+            self.show_result(prewitt_image)
 
 if __name__ == "__main__":
     app = ImageUploaderApp()
