@@ -387,3 +387,47 @@ class ImageProcessor:
                 flipped_img[y, x] = img_array[y, width - x - 1]
 
         return Image.fromarray(flipped_img)
+
+    def apply_order(self, image, order):
+        img_array = np.array(image, dtype=np.float32)
+
+        # Tamanho do kernel
+        kernel_size = 5  # sempre um valor impar
+        half_size = kernel_size // 2
+
+        # Criação do kernel gaussiano
+        GKernel = self.gaussian_kernel(kernel_size)
+
+        # Aplicação do filtro gaussiano
+        height, width, channels = img_array.shape
+        filtered_image = np.zeros_like(img_array)
+
+        for x in range(half_size, width - half_size):
+            for y in range(half_size, height - half_size):
+                for c in range(channels):  # Processa cada canal separadamente
+                    neighbors = []
+                    for i in range(kernel_size):
+                        for j in range(kernel_size):
+                            neighbors.append(
+                                img_array[y - half_size + i, x - half_size + j, c]
+                            )
+
+                    # Ordena os valores da vizinhança
+                    neighbors.sort()
+
+                    # Escolhe o valor com base no tipo de filtro
+                    if order == "med":
+                        value = neighbors[len(neighbors) // 2]
+                    elif order == "min":
+                        value = neighbors[0]
+                    elif order == "max":
+                        value = neighbors[-1]
+                    else:
+                        raise ValueError(f"Filtro de ordem desconhecido: {order}")
+
+                    # Define o valor do pixel na imagem filtrada
+                    filtered_image[y, x, c] = value
+
+        filtered_image = np.clip(filtered_image, 0, 255).astype(np.uint8)
+
+        return Image.fromarray(filtered_image)
