@@ -1,3 +1,5 @@
+from tkinter import Image
+
 import numpy as np
 class LogicalOperations:
 
@@ -61,15 +63,15 @@ class LogicalOperations:
     @staticmethod
     def not_operation(img):
         result_img = np.zeros_like(img, dtype=np.uint8)
-
         if img.ndim == 3:
             for i in range(img.shape[0]):
                 for j in range(img.shape[1]):
                     for k in range(img.shape[2]):
-                        result_img[i, j, k] = 255 - img[i, j, k]
+                        result_img[i, j, k] = ~img[i, j, k]
         else:
             for i in range(img.shape[0]):
                 for j in range(img.shape[1]):
-                    result_img[i, j] = 255 - img[i, j]
+                    result_img[i, j] = ~img[i, j]
+
 
         return result_img

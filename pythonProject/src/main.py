@@ -278,6 +278,9 @@ class ImageUploaderApp(ctk.CTk):
 
     def show_result(self, result_image):
         result_pil_image = Image.fromarray(result_image) if isinstance(result_image, np.ndarray) else result_image
+        # Remove o canal alfa, se existir
+        if result_pil_image.mode == 'RGBA' or result_pil_image.mode == 'LA':
+            result_pil_image = result_pil_image.convert('RGB')
         result_pil_image.thumbnail((300, 300))
         result_img_tk = ImageTk.PhotoImage(result_pil_image)
         self.result_canvas.create_image(150, 150, image=result_img_tk)
